@@ -58,3 +58,4 @@ cor_heatmap(cor(dataLogEstandarizada, Z))
 # 
 # Todo esto puede ser reemplazado por la funcion biplot
 biplot(pca)
+

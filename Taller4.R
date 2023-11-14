@@ -53,5 +53,3 @@ for(j in 1:5){
 # superiores)
 #Z1 representa el rendimiento del mercado
 #Z2 el contraste entre banco y petrolera
-
-
