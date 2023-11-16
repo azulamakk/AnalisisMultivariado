@@ -1,13 +1,29 @@
 #install.packages("tidyverse")
 #install.packages("dplyr")
-install.packages("corrplot")
+#install.packages("corrplot")
 library("corrplot")
 library("tidyverse")
 library("dplyr")
 
+scatter_pares <- function(data){
+  panel.hist <- function(x, ...)
+  {
+    usr <- par("usr")
+    par(usr = c(usr[1:2], 0, 1.5) )
+    h <- hist(x, plot = FALSE)
+    breaks <- h$breaks; nB <- length(breaks)
+    y <- h$counts; y <- y/max(y)
+    rect(breaks[-nB], 0, breaks[-1], y, col = "lightblue", ...)
+  }
+  
+  pairs(data, lower.panel = panel.smooth,
+        upper.panel= NULL, pch=20, lwd=2, diag.panel = panel.hist,
+        cex.labels = 1.3)
+}
+
 options(scipen=999)
 
-data <- melbourne_filtrado
+data <- read.csv("~/Universidad/Analisis Multivariado/datasets/melbourne_filtrado.csv")
 
 #-------------T1.1
 #-----a) Pedro dijo que nos quedamos con las 4 varibles da abajo
@@ -34,6 +50,7 @@ scale(X,center=TRUE, scale= FALSE)
 
 #Para vizualizar scatterplots de varias dimenciones se usa la función pairs(matriz)
 pairs(X)
+scatter_pares(X)
 #Los datos presentan mucha asimetría, outliers que joden, la falta de linealidad.
 #Hay algunas lineales pero ninguna normal.
 
@@ -77,7 +94,7 @@ X_filtrado <- data %>%
   as.matrix
 
 pairs(X_filtrado) 
-
+scatter_pares(X_filtrado)
 #La diferencia entre el gráfico anterior con este de los datos filtrados es porque se sacaron algunos outliers que afectaban mucho en la tendencia.
 
 #-------------T1.2

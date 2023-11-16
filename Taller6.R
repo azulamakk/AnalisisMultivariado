@@ -1,4 +1,4 @@
-data <- read.csv("/cloud/project/datasets/churn_mini.csv")
+data <- read.csv("~/Universidad/Analisis Multivariado/datasets/churn_mini.csv")
 data <- data[,-1]
 
 #-----T5.1
@@ -10,7 +10,7 @@ data <- data[,-1]
 #w es el peso que se le asigna a cada variable
 #k es la variable que vamos a estar analizando
 #i y j son las dos personas que vamos a estar calculandole la distancia de gower
-
+p <- ncol(data)
 w <- rep(1,p)
 
 #Antes hago que mis variables categoricas sean categoricas asi me lo toma el R

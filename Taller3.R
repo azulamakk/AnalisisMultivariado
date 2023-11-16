@@ -1,6 +1,40 @@
-source('Librerias y Funciones.R')
+data <- read.csv("~/Universidad/Analisis Multivariado/datasets/mercurio.csv")
 
-data <- read.csv("/cloud/project/datasets/mercurio.csv")
+plot3d <- function(X,col=NULL,id=NULL, size=6, cube=TRUE){
+  
+  library(plotly)
+  library(RColorBrewer)
+  
+  n <- nrow(X)
+  p <- ncol(X)
+  
+  data <- data.frame(scale(X, scale=FALSE))
+  names(data) <- c('x1','x2','x3')
+  
+  if(is.null(col)==TRUE){
+    data$col <- rep('black',n)
+  } else {
+    data$col <-col}
+  
+  if(is.null(id)==TRUE){
+    data$id<-1:n
+  } else {data$id <- id}
+  
+  fig <- plot_ly(data,
+                 x = ~data[,1], y = ~data[,2], z = ~data[,3],
+                 colors = brewer.pal(p,'Set1'), text=~id,
+                 marker = list(size=size))
+  fig <- fig %>% add_markers(color = ~col)
+  fig <- fig %>% layout(scene = list(xaxis = list(title = colnames(X)[1],
+                                                  range = c(min(data$x1),max(data$x1))),
+                                     yaxis = list(title = colnames(X)[2],
+                                                  range = c(min(data$x2),max(data$x2))),
+                                     zaxis = list(title = colnames(X)[3],
+                                                  range = c(min(data$x3),max(data$x3))),
+                                     aspectmode = ifelse(cube==TRUE,'cube','auto')))
+  fig
+  
+}
 
 #----a) Visualiza en 3 dimensiones los datos
 

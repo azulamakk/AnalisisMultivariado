@@ -1,4 +1,4 @@
-acciones <- read.csv("/cloud/project/datasets/acciones.csv")
+acciones <- read.csv("~/Universidad/Analisis Multivariado/datasets/acciones.csv")
 
 #Es una serie de tiempo. 
 #Nuestro objetivo es visualizar la reduccion de dimesion a s=2 mediante componentes principales PCA

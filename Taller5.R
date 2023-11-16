@@ -1,7 +1,12 @@
-source('Librerias y Funciones.R')
-
 # Ejercicio paises mundo
-paises_mundo <- read.csv("/cloud/project/datasets/paises_mundo.csv")
+paises_mundo <- read.csv("~/Universidad/Analisis Multivariado/datasets/paises_mundo.csv")
+
+cor_heatmap <- function(data){
+  # Load and install heatmaply package
+  library(heatmaply)
+  
+  heatmaply_cor(x = data, Rowv = NA, Colv = NA)
+}
 
 nombres <- paises_mundo$Nombre
 data <- paises_mundo[,-1]

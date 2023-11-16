@@ -1,4 +1,4 @@
-data <- read.delim("/cloud/project/datasets/trade.txt")
+data <- read.delim("~/Universidad/Analisis Multivariado/datasets/trade.txt")
 
 #----a) Hacemos un scatterplot con los datos centrados que estan en una matriz
 
