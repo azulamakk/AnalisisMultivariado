@@ -26,7 +26,8 @@ options(scipen=999)
 data <- read.csv("~/Universidad/Analisis Multivariado/datasets/melbourne_filtrado.csv")
 
 #-------------T1.1
-#-----a) Pedro dijo que nos quedamos con las 4 varibles da abajo
+#-----a) 
+
 #-----b)
 
 X <- data %>%
@@ -46,7 +47,9 @@ X <- data %>%
 #Centrar las variables es restarles sus propias medias a cada variable
 scale(X,center=TRUE, scale= FALSE)
 
-#-----c)
+#-----c)Realizar un gráfico de pares con las variables de X e 
+# interpretar las relaciones entre ellas, ¿Presentan linealidad? 
+# Observar si las distribuciones se ajustan bien a un modelo Normal.
 
 #Para vizualizar scatterplots de varias dimenciones se usa la función pairs(matriz)
 pairs(X)
@@ -54,7 +57,8 @@ scatter_pares(X)
 #Los datos presentan mucha asimetría, outliers que joden, la falta de linealidad.
 #Hay algunas lineales pero ninguna normal.
 
-#-----d)
+#-----d)A partir de los datos, obtener el vector de medias muestrales x 
+# y la matriz de varianzas y covarianzas, ¿A quienes estiman?
 
 #De cada vector aleatorio se puede estimar la esperanza 
 
@@ -74,7 +78,8 @@ cov(X) #Se le llama matriz de varianzas y covarianzas = S
 #Para poder elavuar mejor los resultados de la matriz de covarianzas vamos a estanderizar los valores de la matriz.
 scale(X) #Estandarizamos.  La unidades estan expresadas en desvíos
 
-#-----e)
+#-----e) Calcular la matriz de correlaciones muestrales y 
+# representarlas en un heatmap. ¿Hasta qué punto sirve este resultado?
 
 #La covarianza de los valores estandarizados de la matriz X sirve para tener la matriz de correlaciones
 cov(scale(X)) #Que es lo mismo de cor(X)
@@ -86,7 +91,8 @@ cov(scale(X)) #Que es lo mismo de cor(X)
 covarianzasEscaladas <- cov(scale(X))
 corrplot(covarianzasEscaladas, method = "ellipse")
 
-#-----f)
+#-----f) Repetir los últimos tres incisos si se decide eliminar 
+# las propiedades con Landside mayor a 2000. Detección de datos atípicos
 
 X_filtrado <- data %>%
   filter(Landsize < 2000) %>%
@@ -114,12 +120,13 @@ scatter_pares(X_filtrado)
 #1. Outliers marginales: se calculan con los z (estandarizando).  Rompen con alguna de de las variables
 #2. Outliers "de nube": se calcula con Mahalanobis. Rompen con la correlación (no necesariamente con las variables)
 
-#-----a)
+#-----a) Identificar datos atípicos marginales inspeccionando las variables estandarizadas.
 
 View(scale(X)) #Para ver los primeros 5
 pairs(scale(X))
 
-#-----b)
+#-----b) Identificar datos atípicos realizando un ranking de las distancias de Mahalanobis de los datos a la media muestral. 
+# Interpretar cualitativamente los datos atípicos
 
 mahala <- mahalanobis(X, colMeans(X), cov(X))
 View(data_frame(1:1184,mahala)) #Para ver los primeros 5 

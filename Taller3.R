@@ -36,15 +36,33 @@ plot3d <- function(X,col=NULL,id=NULL, size=6, cube=TRUE){
   
 }
 
-#----a) Visualiza en 3 dimensiones los datos
+#----a)Explorar la visualización en tres dimensiones de los datos usando la 
+# librería plotly. Marcar las observaciones etiquetadas con distinto color. 
+# ¿Que observa sobre el ajuste de los datos a una distribución Normal? 
+# ¿Presentan los datos una estructura lineal?
 
 X <- data[,1:3]
 library(plotly)
 plot3d(X, col=as.factor(data$etiqueta))
 
-#----b) tarea
+#----b) Calcular las distancias de Mahalanobis de los datos a la media y 
+# estudiar el ajuste con una distribución Chi-Cuadrado de n – 1 grados de libertad.
 
-#----c) Aplicar transformaciones porque pinta para ver que pasa
+data$mahalnobis<- mahalanobis(data, colMeans(data), cov(data))
+
+n = ncol(data)
+
+data$pvalue_outlier = 1 - pchisq(data$mahalnobis, df=n-1)
+
+options(scipen=999)
+
+data %>% filter(pvalue_outlier < 0.05)
+
+#----c) Se proponen transformaciones no lineales, definiendo nuevas 
+# variables a partir de las originales como:W1 = √X1, W2 = √X2 y W3 = log(X3). 
+# Aplicar estas transformaciones a los datos e interpretar qué efecto producen 
+# en la visualización del inciso anterior. 
+# ¿Es posible deducir por qué fueron marcadas algunas observaciones?
 
 dataTransformada <- data.frame('w1' = sqrt(data$alcalinidad),
                                'w2' = sqrt(data$clorofila),
@@ -70,3 +88,8 @@ plot(W %*% A, xlim=c(-20,10), ylim=c(-20,10), col=data$etiqueta+1, pch=20)
 crossprod(A[,1], A[,2])
 crossprod(A[,1], A[,1])
 crossprod(A[,1], A[,1])
+
+# ¿Qué dimensión tienen los vectores resultantes? 
+# Los vectores resultantes luego de esta transformacion son de dimension 2. 
+# Aplicar esta transformación a los datos y graficar usando la misma escala en el eje horizontal y el vertical. 
+# ¿Qué observa en relación a los puntos marcados? ¿Qué observa en relación a la covarianza muestral de los nuevos puntos?

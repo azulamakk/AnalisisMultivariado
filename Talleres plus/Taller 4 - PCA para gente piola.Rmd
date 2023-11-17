@@ -1,0 +1,148 @@
+---
+title: "Taller 4 - PCA para facheros"
+output: html_document
+date: "2023-09-08"
+---
+
+```{r}
+data = read.csv("~/Universidad/Analisis Multivariado/datasets/constructora.txt", sep="")
+data = data[,-1]
+
+data
+```
+
+### a. Centrar los datos y realizar scatterplots de pares.
+
+```{r}
+#centrado con media cero y desv 1 
+data = scale(data)
+
+pairs(data)
+```
+### b. Obtener las componentes principales muestrales a partir de una estimacion de Cov(x). Escribir la transformacion lineal necesaria a los datos para obtener los scores en dimension 2.
+
+Desde el punto de vista algebraico, el PCA se basa en la descomposición espectral de la matriz de covarianza o correlación de los datos. Los pasos para realizar PCA son:
+
+1- Estandarización de los datos: Si las escalas de las variables originales son diferentes, es necesario estandarizar los datos para que tengan media 0 y varianza 1.
+
+2- Estimación de la matriz de covarianza (o correlación): Esta matriz captura las relaciones lineales entre las variables.
+
+3- Cálculo de los autovalores y autovectores de la matriz de covarianza (o correlación): Los autovalores representan la varianza que cada componente principal captura de los datos, mientras que los autovectores son los coeficientes de las combinaciones lineales.
+
+4- Ordenar los autovalores y autovectores: Se ordenan los autovalores de mayor a menor y se seleccionan los primeros k autovectores, donde k es el número de componentes principales que se desea retener.
+
+5- Transformación lineal de los datos: Se multiplica la matriz de datos estandarizada por la matriz de autovectores seleccionados para obtener los scores de las componentes principales.
+
+Para obtener los scores en dimensión 2, solo se necesitan los dos primeros autovectores.
+
+
+```{r}
+#matriz de covarianza
+matriz_cov <- cov(data)
+
+#calculo de autovalores y autovectores 
+eigen_result = eigen(matriz_cov) 
+
+#obteneoms los dos primeros autovectores 
+autovectores = eigen_result$vectors[ , 1:2]
+
+# Transformación lineal para obtener los scores en dimensión 2
+scores = data %*% autovectores
+
+```
+
+
+
+### c. Graficar los scores e interpretar la posicion de los puntos. ¿Que variable o variables tienen mas peso en cada componente?
+
+
+```{r}
+# Graficar los scores
+plot(scores, xlab="Componente Principal 1", ylab="Componente Principal 2", main="Gráfico de Scores PCA")
+
+```
+
+```{r}
+# Visualizar los autovectores
+print(autovectores)
+
+```
+Componente Principal 1 (CP1): 
+
+- Todas las variables tienen valores negativos, lo que indica que valores altos en estas variables están asociados con valores bajos en la CP1.
+
+- La variable 3 tiene el valor más negativo (-0.6039552), por lo que tiene el mayor peso en esta componente.
+
+Componente Principal 2 (CP2): 
+
+- La variable 1 tiene un valor positivo (0.66079486), lo que indica que valores altos en esta variable están asociados con valores altos en la CP2.
+
+- La variable 2 tiene el valor más negativo (-0.74741077), lo que indica que tiene el mayor peso en esta componente y que valores altos en esta variable están asociados con valores bajos en la CP2.
+
+- La variable 3 tiene un valor cercano a cero (0.06875527), lo que indica que tiene un peso relativamente bajo en esta componente.
+
+### d. Estimar la matriz de covarianzas del vector completo de componentes principales y compararla con la estimacion disponible de Σ. ¿Que observa? ¿Que proporcion de la variabilidad total capturan las primeras dos componentes?
+
+
+
+```{r}
+# Matriz de covarianzas de los componentes principales
+matriz_cov_PC <- diag(eigen_result$values)
+
+matriz_cov
+matriz_cov_PC
+
+autovalores <- eigen_result$values
+
+# Proporción de la variabilidad total capturada por las primeras dos componentes
+proporcion <- sum(autovalores[1:2]) / sum(autovalores)
+print(paste("La proporción de la variabilidad total capturada por las primeras dos componentes es:", round(proporcion, 4)))
+
+```
+
+
+
+### e. Repetir el analisis obteniendo los scores a partir de una estimacion de Corr(x) y comentar las diferencias.
+
+El análisis de componentes principales (PCA) puede basarse tanto en la matriz de covarianza cov(X) como en la matriz de correlación Corr(X). La elección entre estas dos matrices depende de la naturaleza de los datos y del objetivo del análisis.
+
+Cuando se utiliza la matriz de correlación en lugar de la matriz de covarianza, el PCA se centra en las correlaciones entre las variables, en lugar de las covarianzas. Esto es especialmente útil cuando las variables tienen diferentes unidades de medida o varianzas muy diferentes.
+
+```{r}
+
+# Estandarizar los datos
+datos_estandarizados <- scale(data)
+
+# Estimar la matriz de correlación
+matriz_corr <- cor(datos_estandarizados)
+
+# Obtener autovalores y autovectores de la matriz de correlación
+eigen_corr <- eigen(matriz_corr)
+
+# Autovectores (loadings)
+autovectores_corr <- eigen_corr$vectors
+
+# Calcular los scores de las componentes principales
+scores_corr <- datos_estandarizados %*% autovectores_corr
+
+# Visualizar los scores
+print(scores_corr)
+
+```
+
+Varianza vs. Correlación: Cuando usas Cov(X), estás considerando la varianza y la covarianza de las variables. Sin embargo, al usar Corr(X), estás considerando solo la correlación entre las variables, lo que puede ser útil si las variables tienen diferentes unidades o varianzas muy diferentes.
+
+Interpretación de los componentes: Los componentes principales obtenidos de Corr(X) representan direcciones de máxima correlación en los datos, mientras que los obtenidos de Cov(X) representan direcciones de máxima varianza.
+
+Importancia de las variables: En el PCA basado en Corr(X), todas las variables tienen la misma importancia porque están estandarizadas. En el PCA basado en Cov(X), las variables con mayor varianza tendrán más influencia.
+
+En resumen, si tus variables tienen diferentes unidades o varianzas muy diferentes, es probable que obtengas resultados diferentes al usar Cov(X) en comparación con Corr(X). Es importante elegir el enfoque adecuado según el contexto y el objetivo del análisis.
+
+```{r}
+autovalores_corr <- eigen_corr$values
+
+# Proporción de la variabilidad total capturada por las primeras dos componentes
+proporcion <- sum(autovalores_corr[1:2]) / sum(autovalores_corr)
+print(paste("La proporción de la variabilidad total capturada por las primeras dos componentes es:", round(proporcion, 4)))
+```
+

@@ -1,0 +1,289 @@
+---
+title: "Taller 3 - Normal multivariada"
+output: html_document
+date: "2023-08-25"
+
+---
+#### funciones de pedro 
+```{r}
+#Librerias
+library(tidyverse)
+
+#Funciones utiles para la materia------------------------------
+
+#Parametros graficos (base)
+graph_par <- function(){
+  par(family = "Verdana", cex.axis=0.7, cex.lab=0.7, mar=c(4,4,2,3) - 1.5,
+      mgp=c(1.1,0.25,0), tcl=0)
+}
+graph_par()
+
+
+#Scatter de pares
+scatter_pares <- function(data){
+  panel.hist <- function(x, ...)
+  {
+    usr <- par("usr")
+    par(usr = c(usr[1:2], 0, 1.5) )
+    h <- hist(x, plot = FALSE)
+    breaks <- h$breaks; nB <- length(breaks)
+    y <- h$counts; y <- y/max(y)
+    rect(breaks[-nB], 0, breaks[-1], y, col = "lightblue", ...)
+  }
+  
+  pairs(data, lower.panel = panel.smooth,
+        upper.panel= NULL, pch=20, lwd=2, diag.panel = panel.hist,
+        cex.labels = 1.3)
+  
+}
+
+#Heatmap de correlaciones
+cor_heatmap <- function(data){
+  # Load and install heatmaply package
+  library(heatmaply)
+  
+  heatmaply_cor(x = data, Rowv = NA, Colv = NA)
+  
+}
+
+#Plot tridimensional (plotly)
+plot3d <- function(X,col=NULL,id=NULL, size=6, cube=TRUE){
+  
+  library(plotly)
+  library(RColorBrewer)
+  
+  n <- nrow(X)
+  p <- ncol(X)
+  
+  data <- data.frame(scale(X, scale=FALSE))
+  names(data) <- c('x1','x2','x3')
+  
+  if(is.null(col)==TRUE){
+    data$col <- rep('black',n)
+  } else {
+    data$col <-col}
+  
+  if(is.null(id)==TRUE){
+    data$id<-1:n
+  } else {data$id <- id}
+  
+  fig <- plot_ly(data,
+                 x = ~data[,1], y = ~data[,2], z = ~data[,3],
+                 colors = brewer.pal(p,'Set1'), text=~id,
+                 marker = list(size=size))
+  fig <- fig %>% add_markers(color = ~col)
+  fig <- fig %>% layout(scene = list(xaxis = list(title = colnames(X)[1],
+                                                  range = c(min(data$x1),max(data$x1))),
+                                     yaxis = list(title = colnames(X)[2],
+                                                  range = c(min(data$x2),max(data$x2))),
+                                     zaxis = list(title = colnames(X)[3],
+                                                  range = c(min(data$x3),max(data$x3))),
+                                     aspectmode = ifelse(cube==TRUE,'cube','auto')))
+  fig
+  
+}
+
+
+```
+
+
+```{r}
+
+#source('librerias y funciones.R') ACA LLLAMA AL ARCHIVO CON LAS FUNCIONES
+
+data = read.csv("~/Universidad/Analisis Multivariado/datasets/mercurio.csv")
+
+head(data)
+
+
+
+```
+
+### Explorar la visualizaci´on en tres dimensiones de los datos usando la librerıa plotly. Marcar las observaciones etiquetadas con distinto color. ¿Que observa sobre el ajuste de los datos a una distribucion Normal? ¿Presentan los datos una estructura lineal?
+
+```{r}
+
+plot3d(data[,1:3], col = as.factor(data$etiqueta))
+
+```
+
+### Calcular las distancias de Mahalanobis de los datos a la media y estudiar el ajuste con una distribuci´on Chi-Cuadrado de n – 1 grados de libertad.
+
+Mahalanobis distance is an effective multivariate distance metric that measures the distance between a point (vector) and a distribution. 
+
+What’s wrong with using Euclidean Distance for Multivariate data?
+
+Well, Euclidean distance will work fine as long as the dimensions are equally weighted and are independent of each other. 
+
+if the dimensions (columns in your dataset) are correlated to one another, which is typically the case in real-world datasets, the Euclidean distance between a point and the center of the points (distribution) can give little or misleading information about how close a point really is to the cluster.
+
+That is, as the value of one variable (x-axis) increases, so does the value of the other variable (y-axis). The two points above are equally distant (Euclidean) from the center. But only one of them (blue) is actually more close to the cluster, even though, technically the Euclidean distance between the two points are equal. This is because, Euclidean distance is a distance between two points only. It does not consider how the rest of the points in the dataset vary.
+
+So, it cannot be used to really judge how close a point actually is to a distribution of points. What we need here is a more robust distance metric that is an accurate representation of how distant a point is from a distribution.
+
+What is Mahalanobis Distance?
+
+Mahalonobis distance is the distance between a point and a distribution. And not between two distinct points. It is effectively a multivariate equivalent of the Euclidean distance.
+
+How is Mahalanobis distance different from Euclidean distance?
+
+It transforms the columns into uncorrelated variables
+Scale the columns to make their variance equal to 1
+Finally, it calculates the Euclidean distance.
+
+FORMULA: (x – m)^T * C^(-1) * (x – m)
+
+Let’s take the 
+(x – m)^T . C^(-1) term. (x – m) is essentially the distance of the vector from the mean. We then divide this by the covariance matrix (or multiply by the inverse of the covariance matrix). If you think about it, this is essentially a multivariate equivalent of the regular standardization (z = (x – mu)/sigma).
+
+So, What is the effect of dividing by the covariance? If the variables in your dataset are strongly correlated, then, the covariance will be high. Dividing by a large covariance will effectively reduce the distance.
+
+Likewise, if the X’s are not correlated, then the covariance is not high and the distance is not reduced much. So effectively, it addresses both the problems of scale as well as the correlation of the variables
+
+Relación con la Distribución Chi-Cuadrado:
+
+La distancia de Mahalanobis al cuadrado,D^2, bajo ciertas condiciones, sigue una distribución Chi-Cuadrado con n−1 grados de libertad, donde n es el número de variables. Esto permite realizar pruebas de hipótesis para determinar si un punto es una observación atípica.
+
+```{r}
+data$mahalnobis<- mahalanobis(data, colMeans(data), cov(data))
+
+n = ncol(data)
+
+data$pvalue_outlier = 1 - pchisq(data$mahalnobis, df=n-1)
+
+options(scipen=999)
+
+data %>% filter(pvalue_outlier < 0.05)
+
+#Los puntos que se muestren no pertenecen a la distribucion de nuestros datos (son outliers multivaraidos al 95% de confianza)
+
+```
+
+### c. Se proponen transformaciones no lineales, definiendo nuevas variables a partir de las originales como:
+
+```{r}
+
+X <- data[,1:3]
+plot3d(X, col = as.factor(data$etiqueta))
+scatter_pares(X)
+
+data_tranf <- data.frame('w1' = sqrt(data$alcalinidad),
+                         'w2' = sqrt(data$clorofila),
+                         'w3' = log(data$mercurio))
+
+plot3d(data_tranf, col = as.factor(data$etiqueta))
+
+```
+
+### d. Comparar la matriz de correlaciones de los datos originales con la de los datos transformados.
+
+```{r}
+install.packages("corrplot")
+library(corrplot)
+ 
+# correlation matrix
+
+# data og
+
+d = data[,1:3]
+M<-cor(d)
+
+# data transf
+
+MT<-cor(data_tranf)
+
+# # visualizing correlogram
+# # as circle
+# corrplot(M, method="circle")
+#  
+# # as pie
+# corrplot(M, method="pie")
+#  
+# # as colour
+# corrplot(M, method="color")
+ 
+
+# Set up a 1x2 matrix of plots
+par(mfrow=c(1,2))
+
+# as number
+corrplot(M, method="number")
+
+corrplot(MT, method="number")
+
+
+```
+
+Si comparamos los graficos puede se observar que las correlaciones entre las variables aumentaron luego de la transformacion. 
+
+### e. Se propone realizar una transformacion lineal al vector w = (W1 W2 W3)^ t  cuyas direcciones de proyeccion estan en las columnas de A.  ¿Que dimension tienen los vectores resultantes? Aplicar esta transformacion a los datos y graficar usando la misma escala en el eje horizontal y el vertical. ¿Que observa en relacion a los puntos marcados? ¿Que observa en relacion a la covarianza muestral de los nuevos puntos?
+
+```{r}
+# Definir la matriz A
+A <- cbind(c(-3/4,-2/3,1/5),c(2/3,-4/5,-1/20))
+
+# Suponiendo que data_tranf es tu dataframe
+W <- as.matrix(data_tranf)
+
+# Aplicar la transformación
+W_transformed <- W %*% A
+
+dim(W_transformed)
+```
+w'= A x W 
+
+Los vectores resultantes luego de esta transformacion son de dimensoin 2. 
+
+4. Interpretación:
+Ortogonalidad y Ortonormalidad: Las columnas de la matriz A son vectores. Si su producto punto es cero, son ortogonales. Si además tienen norma 1, son ortonormales.
+
+Covarianza Muestral: Si los nuevos puntos (transformados) están alineados a lo largo de un eje, indica que hay una alta covarianza en esa dirección. Si están dispersos, indica baja covarianza.
+
+```{r}
+v1 <- A[,1]
+v2 <- A[,2]
+
+# Verificar ortogonalidad
+sum(v1 * v2) 
+
+#Los vectores v1 y v2 son ortogonales entre sí (producto escalar cercano a 0). Esto significa que son perpendiculares en el espacio en el que están definidos.
+
+# Verificar ortonormalidad
+sum(v1^2) 
+
+sum(v2^2) 
+
+#Ambos vectores son unitarios. Esto significa que tienen una longitud (o magnitud) de 1.
+
+```
+Si ambos criterios anteriores se cumplen, entonces los vectores son ortonormales. En términos prácticos, tener un conjunto de vectores ortonormales es útil porque proporcionan una base en la que es fácil proyectar otros vectores o realizar transformaciones. En análisis y procesamiento de señales, por ejemplo, las bases ortonormales son especialmente útiles porque simplifican muchos cálculos.
+
+
+```{r}
+# Graficar los datos transformados
+plot(W_transformed[,1], W_transformed[,2], asp=1, xlab="Dimensión 1", ylab="Dimensión 2", main="Datos Transformados")
+
+# Marcar los puntos donde data$etiqueta es 1
+points(W_transformed[data$etiqueta == 1,1], W_transformed[data$etiqueta == 1,2], col="red", pch=19)
+
+```
+
+Que representan las dimensiones del grafico? 
+
+En el gráfico que estás creando, las "dimensiones" se refieren a las direcciones de proyección resultantes de la transformación lineal que aplicaste a tus datos originales usando la matriz A
+
+Para ser más específico:
+
+Dimensión 1 (eje x): Representa la proyección de tus datos en la dirección del primer vector columna de la matriz  A . Es decir, es el resultado de la transformación de tus datos usando el primer vector de A.
+
+Dimensión 2 (eje y): Representa la proyección de tus datos en la dirección del segundo vector columna de la matriz A. Es decir, es el resultado de la transformación de tus datos usando el segundo vector de A.
+
+Cuando realizas una transformación lineal de tus datos usando una matriz, estás proyectando (o mapeando) tus datos en nuevas direcciones definidas por los vectores de esa matriz. En este caso, dado que la matriz A tiene dos columnas (dos vectores), estás proyectando tus datos en dos nuevas direcciones, que son las que estás visualizando en el gráfico como "Dimensión 1" y "Dimensión 2".
+
+Estas "dimensiones" o direcciones de proyección te permiten visualizar cómo se distribuyen tus datos en el espacio definido por los vectores de la matriz A. Es una forma de explorar y entender la estructura y relaciones en tus datos desde una perspectiva diferente a la original.
+
+5. Conclusión:
+Observa cómo se distribuyen los puntos transformados en el gráfico. Si hay una dirección en la que los puntos están más alineados, esa es la dirección de mayor variabilidad.
+
+En este caso podemos oservar mas variablidad en el eje de la dimension 1 
+

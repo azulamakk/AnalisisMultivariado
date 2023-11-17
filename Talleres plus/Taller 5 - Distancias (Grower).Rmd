@@ -1,0 +1,118 @@
+---
+title: "Taller 5 - Practica distancias"
+output: html_document
+date: "2023-09-22"
+---
+
+```{r}
+#install.packages("caret")
+library(caret)
+#install.packages("gower")
+library(gower)
+```
+
+##### a Crear la funcion distancia gower que tenga como argumentos el data set original y un vector de pesos w; y devuelva una matriz de disimilaridades
+
+```{r}
+data <- read.csv("~/Universidad/Analisis Multivariado/datasets/churn_mini.csv")
+data <- data[,-1]
+
+data$Geography <- as.factor(data$Geography)
+data$IsActiveMember <- as.factor(data$IsActiveMember)
+
+p = 7 #cantidad de var del dataset 
+w <- rep(1,p)
+
+
+
+distancia_gower <- function(data, w){
+  
+  n <- nrow(data)
+  dist <- matrix(0,n,n)
+  p <- ncol(data)
+  
+  ranges <- sapply(data, 
+                   function(x) if (!is.factor(x)) diff(range(x)) else NA)
+  
+  for(i in 1:n){
+    for(j in 1:n){
+      a <- 0
+      for(k in 1:p){
+        if(is.factor(data[, k]) == TRUE){
+          s <- as.numeric((data[i, k] == data[j, k]))
+        } else {
+          s <- 1 - abs(data[i, k] - data[j, k])/ranges[k]
+        }
+        a <- a + w[k] * s
+      }
+      dist[i,j]= 1 - (a / sum(w))
+    }
+  }
+  
+  return(dist)
+}
+
+```
+
+```{r}
+delta <- distancia_gower(data, w = rep(1,7))
+plot((delta))
+
+```
+```{r}
+mds <- cmdscale(as.dist(delta))
+plot(mds)
+```
+
+
+```{r}
+
+
+gower_simil <- function(data, w) {
+  
+  n <- nrow(data)
+  DIST <- matrix(0, nrow = n, ncol = n)
+  p <- ncol(data)
+  
+  for (i in 1:n) {
+    for (j in 1:n) {
+        var_types <- sapply(data, class)
+        sum = 0
+        
+        for (k in 1:ncol(data)) {
+          simil_var = 0
+          if (var_types[k] == "factor" || var_types[k] == "character") {
+            simil_var = ifelse(data[i, k] == data[j, k], 1, 0)
+          }
+          else {
+            simil_var = 1 - (abs(data[i, k] - data[j, k]) / diff(range(data[,k])))
+          }
+          var = simil_var * w[k]
+          sum = sum + var
+        }
+        
+        distance_ij = sum / sum(w)
+        
+        DIST[i, j] = distance_ij
+    }
+  }
+  
+  return(DIST)
+}
+
+w = rep(1, ncol(data))
+d = gower_simil(data, w)
+
+
+```
+
+```{r}
+
+```
+
+```{r}
+gower_distance = gower_dist(data, ncol(data))
+gower_matrix <- as.matrix(gower_distance)
+print(gower_matrix)
+```
+
