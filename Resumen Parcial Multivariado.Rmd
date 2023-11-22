@@ -1,0 +1,994 @@
+#### Taller 1. Ej basicos 
+EDA Basico: Tipo var, linealidead, normalidad, correlacion
+
+```{r}
+df_housing = read.csv("~/Universidad/Analisis Multivariado/datasets/melbourne_filtrado.csv")
+
+df_housing = na.omit(df_housing)
+```
+
+a. Identificar las variables y clasificarlas de acuerdo al tipo de dato. Crear un data frame  ́unicamentecon las variables relevantes al an ́alisis
+
+```{r}
+colnames(df_housing)
+as.data.frame(sapply(df_housing, class))
+```
+
+##### b. Clasificar las variables seg ́un el tipo de variable aleatoria que utilizar ́ıa para modelarlas matem ́aticamente.Extraer las variables continuas a una matriz de datos X
+
+```{r}
+library(dplyr)
+col_numericas = as.data.frame(sapply(df_housing, is.numeric))
+df_housing_numericas = df_housing %>% select(which(col_numericas == TRUE))
+
+head(df_housing_numericas)
+
+df_housing_numericas = df_housing_numericas %>% select(-Longtitude, -Lattitude, -Car)
+```
+
+
+##### c. Realizar un gŕafico de pares con las variables de X e interpretar las relaciones entre ellas, ¿Presentanlinealidad? Observar si las distribuciones ajustan bien a un modelo Normal.
+
+```{r}
+
+pairs(df_housing_numericas)
+
+```
+
+
+##### d. A partir de los datos, obtener el vector de medias muestrales x y la matriz de varianzas y covarianzasS, ¿A qui ́enes estiman?
+
+```{r}
+medias_housing = sapply(df_housing_numericas, mean)
+
+matriz_cov_housing = cov(df_housing_numericas)
+
+print(matriz_cov_housing)
+
+```
+
+
+##### e. Calcular la matriz de correlaciones muestrales y representarlas en un heatmap. ¿Hasta qúe punto sirveeste resultado?
+
+```{r}
+
+x = cor(df_housing_numericas)
+x
+
+library(corrplot)
+
+corrplot(x, method = "color", type = "upper")
+
+```
+
+
+##### f. Repetir los  ́ultimos tres incisos si se decide eliminar las propiedades con Landsize mayor a 2000.
+
+```{r}
+df_housing_numericas_filtrado = df_housing_numericas %>% filter(Landsize <= 2000, YearBuilt >1300)
+
+pairs(df_housing_numericas_filtrado)
+```
+
+
+##### a2. Identificar datos at ́ıpicos marginales inspeccionando las variables estandarizadas.
+
+```{r}
+df_housing_numericas_scaled = scale(df_housing_numericas)
+
+boxplot.matrix(df_housing_numericas_scaled)
+
+#"Rooms"        "Price"        "Bedroom2"     "Bathroom"     "Landsize"     "BuildingArea" "YearBuilt"  
+```
+
+
+##### b2. Identificar datos at ́ıpicos realizando un ranking de las distancias de Mahalanobis de los datos a lamedia muestral. Interpretar cualitativamente los datos at ́ıpicos.
+
+```{r}
+df_housing_numericas_maha = mahalanobis(df_housing_numericas_scaled, center = colMeans(df_housing_numericas_scaled), cov = cov(df_housing_numericas_scaled))
+
+ordered_indices <- order(-df_housing_numericas_maha)
+
+# Acceder a las distancias de Mahalanobis ordenadas
+print(df_housing_numericas_maha[ordered_indices])
+
+
+num_top_outliers <- 5  # Puedes ajustar este número según tus necesidades
+top_indices <- order(-df_housing_numericas_maha)[1:num_top_outliers]
+
+# Imprimir las filas correspondientes a las observaciones con las mayores distancias de Mahalanobis
+top_observations <- df_housing_numericas[top_indices, ]
+print(top_observations)
+
+```
+
+#### Taller 2. Transformaciones Lineales
+```{r}
+trade = read.delim("~/Universidad/Analisis Multivariado/datasets/trade.txt")
+names(trade) = c('X2','X1')
+summary(trade)
+
+
+```
+
+##### a. Centrar los datos y graficarlos en un scatterplot.
+
+```{r}
+#centramos los datos(estandarizacion)
+
+trade = scale(trade)
+
+#lo volvemos a transformar en un df luego de estandarizarlo
+trade = as.data.frame(trade)
+#scatterplot
+plot(x = trade$X1, y = trade$X2, main="Scatter plot de datos estandarizados", xlab="Imports", ylab="Exports", pch=5, col="blue")
+```
+
+
+##### b. Elegir una recta que pase sobre el origen para proyectar la nube de puntos. Agregarla al grafico anterior.
+
+```{r plot-line}
+#para que funcione hay que correr todo junto
+
+plot(x = trade$X1, y = trade$X2, main="Scatter plot de datos estandarizados", xlab="Imports", ylab="Exports", pch=5, col="blue")
+abline(a=0, b=1, col="red", lwd=2)
+```
+
+
+##### c. A partir de la recta definida, escribir la ecuaci´on que permite transformar X1 y X2 a Y.
+
+Dado que la línea es y = x (porque tiene una intersección de 0 y una pendiente de 1), la proyección de un punto (X1, X2) en esta línea será una combinación de X1 y X2 tal que Y = X1 + X2.
+
+Conceptualmente: La proyección en la línea y = x implica que estamos sumando las contribuciones de X1 y X2 para obtener un único valor Y. Esta es una forma de reducir la dimensión de los datos, pasando de 2D a 1D.
+
+Por lo tanto, la ecuación correcta para la proyección en la línea que has elegido es:
+
+```{r}
+
+# Y = X1 + X2
+
+```
+
+
+##### d. Crear la matriz de datos X y un vector a, de norma 1, para poder realizar la transformaci´on anterior a todos los datos.
+
+Para realizar la transformación anterior a todos los datos, necesitamos definir la matriz de datos de direccion X y un vector de direccion a de norma 1 que represente la dirección de proyección.
+
+Dado que la línea de proyección es Y = X, la dirección de proyección es a lo largo de la diagonal. Un vector que apunte en esta dirección es [1,1]
+Sin embargo, para que tenga norma 1, debemos normalizarlo.
+
+Para normalizar un vector, lo dividimos por su norma (o longitud). La norma de un vector v se calcula como la raíz cuadrada de la suma de sus componentes al cuadrado.
+
+```{r}
+
+X = data.matrix(trade)
+
+#matrix x
+print(X)
+
+a = c(1,1)
+
+norma_a = sqrt(sum(a^2))
+
+a = a / norma_a
+
+#vector de direccion a normalizado 
+
+a
+
+```
+
+
+La proyección de cada punto de X en la dirección de a se obtiene calculando el producto escalar entre el punto y a. Esto nos da un valor escalar para cada punto, que es su proyección en la línea.
+
+```{r}
+
+Y <- X %*% a
+
+
+```
+Conceptualmente: Al proyectar los datos en la dirección de a, estamos "colapsando" la información de 2D a 1D. Cada punto en el espacio 2D se mapea a un valor escalar en la línea definida por a.
+
+Con estos pasos, habrás transformado todos tus datos según la dirección de proyección definida por la línea Y = X.
+
+##### e. Realizar un histograma y calcular la varianza muestral de la nueva variable Y.
+
+```{r}
+
+hist(Y)
+
+var_y = var(Y)
+
+var_y
+
+```
+
+
+##### f. Definamos una nueva variable E que resuma el error de representacion de cada paıs, y que se obtenga al proyectar los datos en la direccion ortogonal a la recta elegida en b). Encontrar la pendiente y ordenada al origen de dicha recta y superponerla en el grafico original.
+
+Para definir la variable E que resuma el error de representación de cada país, primero debemos entender qué es este error. El error de representación es la distancia entre el punto original y su proyección en la línea. Esta distancia es la longitud de la línea perpendicular (ortogonal) desde el punto hasta la línea de proyección
+
+Paso 1: Encontrar la dirección ortogonal a la recta elegida en b).
+
+Dado que la recta elegida en b) tiene una pendiente de 1 (y=x), su vector de direccion es [1,1]. Un vector ortogonal a este es [-1,1] o su inveso [1,-1]. Vamos a usar el primero [-1,1]
+
+Paso 2: Proyectar los datos en la direccion ortogonal. 
+
+La proyeccion de cada punto de X en la direccion ortogonal se obtiene colaculadno el producto escalar entre el punto y el vector ortogonal.
+
+```{r}
+
+a_ortogonal = c(-1,1)
+
+norma_a_ortogonal = sqrt(sum(a_ortogonal^2))
+
+a_ortogonal_nomralizado = a_ortogonal / norma_a_ortogonal
+
+proyecciones_ortogonales = X %*% a_ortogonal_nomralizado
+
+```
+
+Paso 3: Calcular el error E.
+
+El error E para cada punto es la distancia euclidiana entre el punto original y su proyección ortogonal.
+
+```{r}
+E = sqrt(rowSums((X - matrix(rep(proyecciones_ortogonales, each=2), ncol=2))^2))
+
+```
+
+Paso 4: Encontrar la pendiente y ordenada al origen de la recta ortogonal.
+La pendiente de la recta ortogonal es el negativo del recíproco de la pendiente original. Dado que la pendiente original es 1, la pendiente de la recta ortogonal es -1. La ordenada al origen sigue siendo 0, ya que la recta pasa por el origen.
+
+Paso 5: Superponer la recta ortogonal en el gráfico original.
+
+```{r}
+plot(x = trade$X1, y = trade$X2, main="Scatter plot de datos estandarizados con recta ortogonal", xlab="Imports", ylab="Exports", pch=5, col="blue")
+abline(a=0, b=1, col="red", lwd=2)  # Recta original
+abline(a=0, b=-1, col="green", lwd=2)  # Recta ortogonal
+
+```
+
+
+Conceptualmente: La recta ortogonal representa la dirección en la que se encuentra el mayor error de representación para cada punto. Al proyectar los puntos en esta dirección, estamos midiendo cuánto se desvían de la línea original en términos perpendiculares.
+
+
+##### g. Armar una matriz T ortogonal de 2x2, de modo que el producto XT devuelva un nuevo data set con las variables Y y E en dos columnas.
+
+Para obtener una matriz T ortogonal de 2x2 que, al multiplicarla por X, nos de un nuevo dataset con las variables Y y E en dos columnas, debemos coinsderar lo siguiente:
+
+1. La priemra columna de T debe ser el vector normalizado que define la direccion de proyeccion Y. En nuestro caso, es la direccion de la recta y = x, que es [1,1] normalizado. 
+
+2. La segunda columna de T debe ser el vector normalizado que define la direccion de proyeccion E. En nuestro caso, es la direccion ortogonal de la recta y = x, que es [-1, 1] normalizado. 
+
+Paso 1: Definir y normalizar los vectores de dirección.
+
+```{r}
+#Vector Y 
+a_Y  = c(1,1)
+
+norma_a_Y = sqrt(sum(a_Y^2))
+
+a_Y_nomralizado = a_Y / norma_a_Y
+
+#Vetor E 
+a_E  = c(-1,1)
+
+norma_a_E = sqrt(sum(a_E^2))
+
+a_E_nomralizado = a_E / norma_a_E
+```
+
+Paso 2: Construir la matriz T ortogonal. 
+
+```{r}
+T = cbind(a_Y_nomralizado, a_E_nomralizado)
+```
+
+Paso 3: Multiplicar X por T para obtener el nuevo dataset.
+
+```{r}
+
+YE = X %*% T
+
+colnames(YE) = c("Y", "E")
+
+YE = as.data.frame(YE)
+
+YE
+
+```
+
+
+Conceptualmente: La matriz T es una matriz de transformación que rota y proyecta los puntos en X a lo largo de las direcciones definidas por Y y E. Al multiplicar X por T, estamos transformando cada punto en X a este nuevo espacio definido por Y y E.
+
+##### h. Hacer un scatterplot de las variables Y y E. ¿Que observa? Estimar la matriz de varianzas y covarianzas de los nuevos datos.
+
+```{r}
+plot(x = YE$Y, y = YE$E, main="Scatter plot de E y Y", xlab="Y", ylab="E", pch=5, col="blue")
+```
+
+```{r}
+#VAR
+var_Y = var(YE$Y)
+var_Y
+
+var_E = var(YE$E)
+var_E
+
+
+#COV
+
+cov_YE = cov(x = YE$Y, y = YE$E)
+cov_YE
+```
+Conceptualmente: La varianza de Y es mayor que la de E, lo que indica que la dirección de Y captura la mayor parte de la variación en los datos. La covarianza cercana a cero entre Y y E confirma que las proyecciones son ortogonales y, por lo tanto, independientes entre sí.
+
+##### i. Repetir los incisos anteriores usando una nueva direccion de proyeccion que no sea ortogonal a a. ¿Que observa?
+
+Se elige una direccionde pendiente 2 ( y = 2x).
+
+```{r}
+# Definir y normalizar la nueva dirección de proyección.
+a_nuevo <- c(1, 2)
+norma_a_nuevo <- sqrt(sum(a_nuevo^2))
+a_nuevo_normalizado <- a_nuevo / norma_a_nuevo
+
+```
+
+```{r}
+#Proyectar los datos en la nueva dirección.
+proyecciones_nuevo <- X %*% a_nuevo_normalizado
+
+```
+
+```{r}
+#Calcular el error E para la nueva dirección.
+E_nuevo <- sqrt(rowSums((X - matrix(rep(proyecciones_nuevo, each=2), ncol=2))^2))
+
+```
+
+```{r}
+#Scatterplot de las nuevas proyecciones y errores.
+plot(proyecciones_nuevo, E_nuevo, main="Scatterplot de Y vs E para nueva dirección", xlab="Y", ylab="E", pch=19, col="darkgreen")
+
+```
+
+
+```{r}
+#Estimar la matriz de varianzas y covarianzas para la nueva dirección.
+nuevo_dataset_2 <- data.frame(Y=proyecciones_nuevo, E=E_nuevo)
+matriz_cov_2 <- cov(nuevo_dataset_2)
+print(matriz_cov_2)
+```
+
+Observaciones:
+
+Scatterplot: En el scatterplot de las nuevas proyecciones Y vs errores E, es posible que observes una distribución diferente de puntos en comparación con la dirección original. Dependiendo de la estructura de los datos, la variación capturada por la nueva dirección puede ser menor o mayor que la original.
+
+Matriz de Covarianza: La varianza de Y para la nueva dirección te indicará cuánta variación está siendo capturada por esta dirección. Si es significativamente menor que la varianza de Y para la dirección original, indica que esta nueva dirección no es tan "informativa" como la original. La covarianza entre Y y E no será exactamente cero, ya que la nueva dirección no es ortogonal a la original.
+
+Conceptualmente: Al elegir una dirección de proyección que no es ortogonal a la original, estamos explorando diferentes formas de representar los datos. La calidad de esta representación se refleja en la varianza de las proyecciones y en el error de representación. Si la nueva dirección captura menos variación que la original, indica que la dirección original era más adecuada para representar la estructura subyacente de los datos.
+
+##### j. Aplicar la estandarizacion multivariante a los datos. Verificar que las distancias eucleudeas en el nuevo espacio corresponden a las distancias de Mahalanobis en el espacio original.
+
+Teoría:
+
+La estandarización multivariante implica transformar cada variable (columna) de un conjunto de datos para que tenga una media de 0 y una desviación estándar de 1. Esto se hace para que todas las variables tengan la misma escala y, por lo tanto, tengan la misma influencia en los análisis multivariantes.
+
+La distancia de Mahalanobis entre dos puntos en un espacio multivariante es una medida de distancia que tiene en cuenta la correlación entre las variables y la escala de las variables. Es una generalización de la distancia euclidiana que toma en cuenta la estructura de covarianza de los datos.
+
+Relación entre Distancia Euclidiana y Mahalanobis:
+Después de la estandarización multivariante, la matriz de covarianza se convierte en la matriz identidad. Por lo tanto, la distancia de Mahalanobis en el espacio original se convierte en la distancia euclidiana en el espacio estandarizado.
+
+
+```{r}
+X = trade 
+
+X_estand = scale(X)
+
+
+#Cálculo de la Distancia de Mahalanobis en el espacio original
+cov_matrix <- cov(X)
+inv_cov_matrix <- solve(cov_matrix)
+dist_mahalanobis <- mahalanobis(X, colMeans(X), inv_cov_matrix)
+head(dist_mahalanobis)
+
+#Cálculo de la Distancia de Mahalanobis en el espacio original
+dist_euclidiana <- dist(X_estand)
+head(dist_euclidiana)
+```
+
+Al comparar dist_mahalanobis y dist_euclidiana, deberían ser aproximadamente iguales, lo que verifica la relación teórica entre la distancia de Mahalanobis en el espacio original y la distancia euclidiana en el espacio estandarizado.
+
+
+```{r}
+summary(dist_mahalanobis)
+summary(as.vector(dist_euclidiana))
+
+```
+
+```{r}
+diferencias <- abs(dist_mahalanobis - as.vector(dist_euclidiana))
+summary(diferencias)
+```
+
+```{r}
+hist(diferencias, main="Histograma de Diferencias", xlab="Diferencia", ylab="Frecuencia")
+```
+#### funciones de pedro.scatter_pares y plot3d
+```{r}
+#Librerias
+library(tidyverse)
+
+#Plot tridimensional (plotly)
+plot3d <- function(X,col=NULL,id=NULL, size=6, cube=TRUE){
+  
+  library(plotly)
+  library(RColorBrewer)
+  
+  n <- nrow(X)
+  p <- ncol(X)
+  
+  data <- data.frame(scale(X, scale=FALSE))
+  names(data) <- c('x1','x2','x3')
+  
+  if(is.null(col)==TRUE){
+    data$col <- rep('black',n)
+  } else {
+    data$col <-col}
+  
+  if(is.null(id)==TRUE){
+    data$id<-1:n
+  } else {data$id <- id}
+  
+  fig <- plot_ly(data,
+                 x = ~data[,1], y = ~data[,2], z = ~data[,3],
+                 colors = brewer.pal(p,'Set1'), text=~id,
+                 marker = list(size=size))
+  fig <- fig %>% add_markers(color = ~col)
+  fig <- fig %>% layout(scene = list(xaxis = list(title = colnames(X)[1],
+                                                  range = c(min(data$x1),max(data$x1))),
+                                     yaxis = list(title = colnames(X)[2],
+                                                  range = c(min(data$x2),max(data$x2))),
+                                     zaxis = list(title = colnames(X)[3],
+                                                  range = c(min(data$x3),max(data$x3))),
+                                     aspectmode = ifelse(cube==TRUE,'cube','auto')))
+  fig
+  
+}
+
+#Scatter de pares
+scatter_pares <- function(data){
+  panel.hist <- function(x, ...)
+  {
+    usr <- par("usr")
+    par(usr = c(usr[1:2], 0, 1.5) )
+    h <- hist(x, plot = FALSE)
+    breaks <- h$breaks; nB <- length(breaks)
+    y <- h$counts; y <- y/max(y)
+    rect(breaks[-nB], 0, breaks[-1], y, col = "lightblue", ...)
+  }
+  
+  pairs(data, lower.panel = panel.smooth,
+        upper.panel= NULL, pch=20, lwd=2, diag.panel = panel.hist,
+        cex.labels = 1.3)
+  
+}
+
+```
+#### Taller 3. Normalidad y Linealidad
+
+
+```{r}
+
+#source('librerias y funciones.R') ACA LLLAMA AL ARCHIVO CON LAS FUNCIONES
+
+data = read.csv("~/Universidad/Analisis Multivariado/datasets/mercurio.csv")
+
+head(data)
+
+
+
+```
+
+##### a. Explorar la visualizaci´on en tres dimensiones de los datos usando la librerıa plotly. Marcar las observaciones etiquetadas con distinto color. ¿Que observa sobre el ajuste de los datos a una distribucion Normal? ¿Presentan los datos una estructura lineal?
+
+```{r}
+plot3d(data[,1:3], col = as.factor(data$etiqueta))
+```
+
+##### b. Calcular las distancias de Mahalanobis de los datos a la media y estudiar el ajuste con una distribuci´on Chi-Cuadrado de n – 1 grados de libertad.
+
+Mahalanobis distance is an effective multivariate distance metric that measures the distance between a point (vector) and a distribution. 
+
+What’s wrong with using Euclidean Distance for Multivariate data?
+
+Well, Euclidean distance will work fine as long as the dimensions are equally weighted and are independent of each other. 
+
+if the dimensions (columns in your dataset) are correlated to one another, which is typically the case in real-world datasets, the Euclidean distance between a point and the center of the points (distribution) can give little or misleading information about how close a point really is to the cluster.
+
+That is, as the value of one variable (x-axis) increases, so does the value of the other variable (y-axis). The two points above are equally distant (Euclidean) from the center. But only one of them (blue) is actually more close to the cluster, even though, technically the Euclidean distance between the two points are equal. This is because, Euclidean distance is a distance between two points only. It does not consider how the rest of the points in the dataset vary.
+
+So, it cannot be used to really judge how close a point actually is to a distribution of points. What we need here is a more robust distance metric that is an accurate representation of how distant a point is from a distribution.
+
+What is Mahalanobis Distance?
+
+Mahalonobis distance is the distance between a point and a distribution. And not between two distinct points. It is effectively a multivariate equivalent of the Euclidean distance.
+
+How is Mahalanobis distance different from Euclidean distance?
+
+It transforms the columns into uncorrelated variables
+Scale the columns to make their variance equal to 1
+Finally, it calculates the Euclidean distance.
+
+FORMULA: (x – m)^T * C^(-1) * (x – m)
+
+Let’s take the 
+(x – m)^T . C^(-1) term. (x – m) is essentially the distance of the vector from the mean. We then divide this by the covariance matrix (or multiply by the inverse of the covariance matrix). If you think about it, this is essentially a multivariate equivalent of the regular standardization (z = (x – mu)/sigma).
+
+So, What is the effect of dividing by the covariance? If the variables in your dataset are strongly correlated, then, the covariance will be high. Dividing by a large covariance will effectively reduce the distance.
+
+Likewise, if the X’s are not correlated, then the covariance is not high and the distance is not reduced much. So effectively, it addresses both the problems of scale as well as the correlation of the variables
+
+Relación con la Distribución Chi-Cuadrado:
+
+La distancia de Mahalanobis al cuadrado,D^2, bajo ciertas condiciones, sigue una distribución Chi-Cuadrado con n−1 grados de libertad, donde n es el número de variables. Esto permite realizar pruebas de hipótesis para determinar si un punto es una observación atípica.
+
+```{r}
+data$mahalnobis<- mahalanobis(data, colMeans(data), cov(data))
+
+n = ncol(data)
+
+data$pvalue_outlier = 1 - pchisq(data$mahalnobis, df = (n-1))
+
+options(scipen=999)
+
+data %>% filter(pvalue_outlier < 0.05)
+
+
+#Los puntos que se muestren no pertenecen a la distribucion de nuestros datos (son outliers multivaraidos al 95% de confianza)
+
+```
+
+##### c. Se proponen transformaciones no lineales, definiendo nuevas variables a partir de las originales como:
+
+```{r}
+
+X <- data[,1:3]
+plot3d(X, col = as.factor(data$etiqueta))
+
+```
+```{r}
+scatter_pares(X)
+```
+
+```{r}
+
+data_tranf <- data.frame('w1' = sqrt(data$alcalinidad),
+                         'w2' = sqrt(data$clorofila),
+                         'w3' = log(data$mercurio))
+
+plot3d(data_tranf, col = as.factor(data$etiqueta))
+```
+
+```{r}
+scatter_pares(data_tranf)
+```
+
+##### d. Comparar la matriz de correlaciones de los datos originales con la de los datos transformados.
+
+```{r}
+library(corrplot)
+ 
+# correlation matrix
+
+# data og
+
+d = data[,1:3]
+M<-cor(d)
+
+# data transf
+
+MT<-cor(data_tranf)
+
+# # visualizing correlogram
+# # as circle
+# corrplot(M, method="circle")
+#  
+# # as pie
+# corrplot(M, method="pie")
+#  
+# # as colour
+# corrplot(M, method="color")
+ 
+
+# Set up a 1x2 matrix of plots
+par(mfrow=c(1,2))
+
+# as number
+corrplot(M, method="number")
+
+corrplot(MT, method="number")
+
+
+```
+
+Si comparamos los graficos puede se observar que las correlaciones entre las variables aumentaron luego de la transformacion. 
+
+##### e. Se propone realizar una transformacion lineal al vector w = (W1 W2 W3)^ t  cuyas direcciones de proyeccion estan en las columnas de A.  ¿Que dimension tienen los vectores resultantes? Aplicar esta transformacion a los datos y graficar usando la misma escala en el eje horizontal y el vertical. ¿Que observa en relacion a los puntos marcados? ¿Que observa en relacion a la covarianza muestral de los nuevos puntos?
+
+```{r}
+# Definir la matriz A
+A <- cbind(c(-3/4,-2/3,1/5),c(2/3,-4/5,-1/20))
+
+# Suponiendo que data_tranf es tu dataframe
+W <- as.matrix(data_tranf)
+
+# Aplicar la transformación
+W_transformed <- W %*% A
+
+dim(W_transformed)
+```
+w'= A x W 
+
+Los vectores resultantes luego de esta transformacion son de dimensoin 2. 
+
+4. Interpretación:
+Ortogonalidad y Ortonormalidad: Las columnas de la matriz A son vectores. Si su producto punto es cero, son ortogonales. Si además tienen norma 1, son ortonormales.
+
+Covarianza Muestral: Si los nuevos puntos (transformados) están alineados a lo largo de un eje, indica que hay una alta covarianza en esa dirección. Si están dispersos, indica baja covarianza.
+
+```{r}
+v1 <- A[,1]
+v2 <- A[,2]
+
+# Verificar ortogonalidad
+sum(v1 * v2) 
+
+#Los vectores v1 y v2 son ortogonales entre sí (producto escalar cercano a 0). Esto significa que son perpendiculares en el espacio en el que están definidos.
+
+# Verificar ortonormalidad
+sum(v1^2) 
+
+sum(v2^2) 
+
+#Ambos vectores son unitarios. Esto significa que tienen una longitud (o magnitud) de 1.
+
+```
+Si ambos criterios anteriores se cumplen, entonces los vectores son ortonormales. En términos prácticos, tener un conjunto de vectores ortonormales es útil porque proporcionan una base en la que es fácil proyectar otros vectores o realizar transformaciones. En análisis y procesamiento de señales, por ejemplo, las bases ortonormales son especialmente útiles porque simplifican muchos cálculos.
+
+
+```{r}
+# Graficar los datos transformados
+plot(W_transformed[,1], W_transformed[,2], asp=1, xlab="Dimensión 1", ylab="Dimensión 2", main="Datos Transformados")
+
+# Marcar los puntos donde data$etiqueta es 1
+points(W_transformed[data$etiqueta == 1,1], W_transformed[data$etiqueta == 1,2], col="red", pch=19)
+
+```
+
+Que representan las dimensiones del grafico? 
+
+En el gráfico que estás creando, las "dimensiones" se refieren a las direcciones de proyección resultantes de la transformación lineal que aplicaste a tus datos originales usando la matriz A
+
+Para ser más específico:
+
+Dimensión 1 (eje x): Representa la proyección de tus datos en la dirección del primer vector columna de la matriz  A . Es decir, es el resultado de la transformación de tus datos usando el primer vector de A.
+
+Dimensión 2 (eje y): Representa la proyección de tus datos en la dirección del segundo vector columna de la matriz A. Es decir, es el resultado de la transformación de tus datos usando el segundo vector de A.
+
+Cuando realizas una transformación lineal de tus datos usando una matriz, estás proyectando (o mapeando) tus datos en nuevas direcciones definidas por los vectores de esa matriz. En este caso, dado que la matriz A tiene dos columnas (dos vectores), estás proyectando tus datos en dos nuevas direcciones, que son las que estás visualizando en el gráfico como "Dimensión 1" y "Dimensión 2".
+
+Estas "dimensiones" o direcciones de proyección te permiten visualizar cómo se distribuyen tus datos en el espacio definido por los vectores de la matriz A. Es una forma de explorar y entender la estructura y relaciones en tus datos desde una perspectiva diferente a la original.
+
+5. Conclusión:
+Observa cómo se distribuyen los puntos transformados en el gráfico. Si hay una dirección en la que los puntos están más alineados, esa es la dirección de mayor variabilidad.
+
+En este caso podemos oservar mas variablidad en el eje de la dimension 1 
+
+
+#### Taller 4. PCA
+
+```{r}
+data = read.csv("~/Universidad/Analisis Multivariado/datasets/constructora.txt", sep="")
+
+data = data[,-1]
+
+data
+```
+
+##### a. Centrar los datos y realizar scatterplots de pares.
+
+```{r}
+#centrado con media cero y desv 1 
+
+data = scale(data)
+
+#scatter_pares(data)
+
+pairs(data)
+
+```
+##### b. Obtener las componentes principales muestrales a partir de una estimacion de Cov(x). Escribir la transformacion lineal necesaria a los datos para obtener los scores en dimension 2.
+
+Desde el punto de vista algebraico, el PCA se basa en la descomposición espectral de la matriz de covarianza o correlación de los datos. Los pasos para realizar PCA son:
+
+1- Estandarización de los datos: Si las escalas de las variables originales son diferentes, es necesario estandarizar los datos para que tengan media 0 y varianza 1.
+
+2- Estimación de la matriz de covarianza (o correlación): Esta matriz captura las relaciones lineales entre las variables.
+
+3- Cálculo de los autovalores y autovectores de la matriz de covarianza (o correlación): Los autovalores representan la varianza que cada componente principal captura de los datos, mientras que los autovectores son los coeficientes de las combinaciones lineales.
+
+4- Ordenar los autovalores y autovectores: Se ordenan los autovalores de mayor a menor y se seleccionan los primeros k autovectores, donde k es el número de componentes principales que se desea retener.
+
+5- Transformación lineal de los datos: Se multiplica la matriz de datos estandarizada por la matriz de autovectores seleccionados para obtener los scores de las componentes principales.
+
+Para obtener los scores en dimensión 2, solo se necesitan los dos primeros autovectores.
+
+
+```{r}
+#matriz de covarianza
+matriz_cov <- cov(data)
+
+#calculo de autovalores y autovectores 
+eigen_result = eigen(matriz_cov) 
+
+#obteneoms los dos primeros autovectores 
+autovectores = eigen_result$vectors[ , 1:2]
+
+# Transformación lineal para obtener los scores en dimensión 2
+scores = data %*% autovectores
+
+```
+
+
+
+##### c. Graficar los scores e interpretar la posicion de los puntos. ¿Que variable o variables tienen mas peso en cada componente?
+
+
+```{r}
+# Graficar los scores
+plot(scores, xlab="Componente Principal 1", ylab="Componente Principal 2", main="Gráfico de Scores PCA")
+
+```
+
+```{r}
+# Visualizar los autovectores
+print(autovectores)
+
+```
+Componente Principal 1 (CP1): 
+
+- Todas las variables tienen valores negativos, lo que indica que valores altos en estas variables están asociados con valores bajos en la CP1.
+
+- La variable 3 tiene el valor más negativo (-0.6039552), por lo que tiene el mayor peso en esta componente.
+
+Componente Principal 2 (CP2): 
+
+- La variable 1 tiene un valor positivo (0.66079486), lo que indica que valores altos en esta variable están asociados con valores altos en la CP2.
+
+- La variable 2 tiene el valor más negativo (-0.74741077), lo que indica que tiene el mayor peso en esta componente y que valores altos en esta variable están asociados con valores bajos en la CP2.
+
+- La variable 3 tiene un valor cercano a cero (0.06875527), lo que indica que tiene un peso relativamente bajo en esta componente.
+
+##### d. Estimar la matriz de covarianzas del vector completo de componentes principales y compararla con la estimacion disponible de Σ. ¿Que observa? ¿Que proporcion de la variabilidad total capturan las primeras dos componentes?
+
+
+
+```{r}
+# Matriz de covarianzas de los componentes principales
+matriz_cov_PC <- diag(eigen_result$values)
+
+matriz_cov
+matriz_cov_PC
+
+autovalores <- eigen_result$values
+
+# Proporción de la variabilidad total capturada por las primeras dos componentes
+proporcion <- sum(autovalores[1:2]) / sum(autovalores)
+print(paste("La proporción de la variabilidad total capturada por las primeras dos componentes es:", round(proporcion, 4)))
+
+```
+Matriz de Covarianzas (Σ o matriz_cov): La matriz de covarianzas original del conjunto de datos parece ser una matriz 3×3 , lo que indica que tienes tres variables originales (x1, x2, x3). Los valores en la diagonal (1.0) representan la varianza de cada una de las variables, y los valores fuera de la diagonal representan las covarianzas entre las variables. Por ejemplo, la covarianza entre x1 y x2 es 0.7244728, lo que indica una relación lineal positiva entre estas dos variables.
+
+Matriz de Covarianzas de los Componentes Principales (matriz_cov_PC): Esto se muestra como una matriz diagonal, donde cada valor en la diagonal representa un autovalor de la matriz de covarianzas original. Los autovalores miden la cantidad de varianza capturada por cada componente principal. En PCA, al calcular los autovalores y autovectores, transformas los datos originales en un nuevo conjunto de variables que son linealmente no correlacionadas. Estos son tus componentes principales.
+
+Comparación de Matrices: Cuando comparas la matriz de covarianzas original con la matriz de covarianzas de los componentes principales, notarás que la matriz de covarianzas de los componentes principales es diagonal, lo que indica que los componentes principales son ortogonales (no correlacionados) entre sí. Esto contrasta con la matriz de covarianzas original, donde las variables pueden estar correlacionadas (como lo indican los valores no diagonales).
+
+Proporción de la Variabilidad Total: La variabilidad total de los datos es la suma de los autovalores (la traza de la matriz de covarianzas original). La proporción de la variabilidad que capturan las primeras dos componentes se calcula sumando los dos primeros autovalores y dividiéndolos por la suma total de los autovalores. En tu caso, la proporción es aproximadamente 0.9929 o 99.29%, lo que significa que las primeras dos componentes principales capturan casi toda la variabilidad de los datos, dejando muy poco para la tercera componente. Esto sugiere que podrías reducir la dimensionalidad de tus datos de tres dimensiones a dos con muy poca pérdida de información.
+
+
+##### e. Repetir el analisis obteniendo los scores a partir de una estimacion de Corr(x) y comentar las diferencias.
+
+El análisis de componentes principales (PCA) puede basarse tanto en la matriz de covarianza cov(X) como en la matriz de correlación Corr(X). La elección entre estas dos matrices depende de la naturaleza de los datos y del objetivo del análisis.
+
+Cuando se utiliza la matriz de correlación en lugar de la matriz de covarianza, el PCA se centra en las correlaciones entre las variables, en lugar de las covarianzas. Esto es especialmente útil cuando las variables tienen diferentes unidades de medida o varianzas muy diferentes.
+
+```{r}
+
+# Estandarizar los datos
+datos_estandarizados <- scale(data)
+
+# Estimar la matriz de correlación
+matriz_corr <- cor(datos_estandarizados)
+
+# Obtener autovalores y autovectores de la matriz de correlación
+eigen_corr <- eigen(matriz_corr)
+
+# Autovectores (loadings)
+autovectores_corr <- eigen_corr$vectors
+
+# Calcular los scores de las componentes principales
+scores_corr <- datos_estandarizados %*% autovectores_corr
+
+# Visualizar los scores
+print(scores_corr)
+
+```
+
+Varianza vs. Correlación: Cuando usas Cov(X), estás considerando la varianza y la covarianza de las variables. Sin embargo, al usar Corr(X), estás considerando solo la correlación entre las variables, lo que puede ser útil si las variables tienen diferentes unidades o varianzas muy diferentes.
+
+Interpretación de los componentes: Los componentes principales obtenidos de Corr(X) representan direcciones de máxima correlación en los datos, mientras que los obtenidos de Cov(X) representan direcciones de máxima varianza.
+
+Importancia de las variables: En el PCA basado en Corr(X), todas las variables tienen la misma importancia porque están estandarizadas. En el PCA basado en Cov(X), las variables con mayor varianza tendrán más influencia.
+
+En resumen, si tus variables tienen diferentes unidades o varianzas muy diferentes, es probable que obtengas resultados diferentes al usar Cov(X) en comparación con Corr(X). Es importante elegir el enfoque adecuado según el contexto y el objetivo del análisis.
+
+```{r}
+autovalores_corr <- eigen_corr$values
+
+# Proporción de la variabilidad total capturada por las primeras dos componentes
+proporcion <- sum(autovalores_corr[1:2]) / sum(autovalores_corr)
+print(paste("La proporción de la variabilidad total capturada por las primeras dos componentes es:", round(proporcion, 4)))
+```
+
+#### Taller 5. Distancia de Gower 
+
+```{r}
+#install.packages("caret")
+library(caret)
+#install.packages("gower")
+library(gower)
+
+data <- read.csv("~/Universidad/Analisis Multivariado/datasets/churn_mini.csv")
+data <- data[,-1]
+
+# transformo a categoricas las columnas de este tipo
+
+data$Geography <- as.factor(data$Geography)
+data$IsActiveMember <- as.factor(data$IsActiveMember)
+
+```
+
+##### a funcion gower
+
+```{r}
+
+p = ncol(data) #cantidad de var del dataset 
+w <- rep(1,p) #peso asigndo a cada var
+
+
+
+distancia_gower <- function(data, w){
+  
+  n <- nrow(data)
+  dist <- matrix(0,n,n)
+  p <- ncol(data)
+  
+  ranges <- sapply(data, 
+                   function(x) if (!is.factor(x)) diff(range(x)) else NA)
+  
+  for(i in 1:n){
+    for(j in 1:n){
+      a <- 0
+      for(k in 1:p){
+        if(is.factor(data[, k]) == TRUE){
+          s <- as.numeric((data[i, k] == data[j, k]))
+        } else {
+          s <- 1 - abs(data[i, k] - data[j, k])/ranges[k]
+        }
+        a <- a + w[k] * s
+      }
+      dist[i,j]= 1 - (a / sum(w))
+    }
+  }
+  
+  return(dist)
+}
+
+```
+
+Una disimilaridad de 0 entre dos puntos indica que son idénticos (considerando los pesos).
+
+A medida que la disimilaridad se acerca a 1, los puntos son menos similares.
+
+Los pesos permiten ajustar la importancia relativa de cada variable en el cálculo de la similaridad.
+
+##### b. matriz disimil usando func
+
+Utilizando la funcion, Obtener la matriz de disimilaridades correspondiente a estos datos tomando wk = 1 para todas las variables.
+
+```{r}
+
+
+delta <- distancia_gower(data, w = rep(1,7))
+
+delta
+```
+Matriz de Disimilaridades (δ) con la Distancia de Gower: Esta distancia es adecuada cuando se tienen datos mixtos (numéricos y categóricos). La matriz resultante (delta) representa qué tan diferentes o similares son los objetos entre sí.
+
+
+##### c. mds
+
+Aplicar la funcion cmdscale de la librerıa base de R, graficar la configuracion de puntos que arroja.
+Calcular la matriz de distancias euclıdeas de estos puntos y compararla con la matriz obtenida en el inciso anterior
+
+```{r}
+
+mds <- cmdscale(delta, k=2)
+?cmdscale
+```
+
+Cercanía de los Puntos: Los puntos que están más cerca unos de otros en el gráfico MDS representan objetos que son más similares según las disimilaridades de Gower.
+
+Distancias Relativas: La distribución espacial de los puntos da una idea de cómo los objetos se agrupan o se dispersan en el espacio multidimensional original.
+
+Escalamiento Multidimensional (MDS): Aplicas MDS a la matriz de disimilaridades para obtener una configuración de puntos en un espacio de dos dimensiones (mds). La función cmdscale realiza este proceso, y el resultado intenta preservar las disimilaridades originales en un espacio reducido, es decir, si dos puntos están muy separados en la matriz de disimilaridades, deberían estar igualmente lejos en el gráfico resultante del MDS.
+
+La utilidad de MDS sobre delta es que transforma las disimilaridades, que pueden ser difíciles de interpretar en su forma original, especialmente en conjuntos de datos grandes y multidimensionales, en una forma visual intuitiva y comprensible. Al visualizar los datos en dos dimensiones, puedes buscar patrones como grupos de objetos similares o identificar outliers.
+
+Comparación de Matrices de Distancia
+
+```{r}
+plot(delta, pch = 20, type = 'n')
+text(delta, rownames(data))
+```
+
+
+```{r}
+delta <- distancia_gower((data), w = rep(1,7))
+mds <- cmdscale(as.dist(delta), eig = TRUE, k = 2)
+plot(mds, pch = 20, type = 'n')
+text(mds, rownames(data))
+
+mds$points/delta[, 1:2]
+
+delta[, 1:2]
+```
+
+```{r}
+matriz_cov_mds <- diag(mds$eig)
+
+matriz_cov = cov(delta)
+matriz_cov_PC
+
+autovalores <- mds$eig
+
+# Proporción de la distancica total capturada por las primeras dos componentes
+proporcion <- sum(autovalores[1:2]) / sum(autovalores)
+```
+
+
+```{r}
+
+mds$eigen
+mds <- cmdscale(as.dist(distancia_gower(data, w = c(1,100,1,1,1,1,1))))
+plot(mds, pch = 20, type = 'n')
+text(mds, rownames(data), col ='firebrick')
+cov(mds)
+
+mds
+
+
+heatmap(delta, Rowv = NA, Colv = NA)
+heatmap((mds))
+
+plot3d(cmdscale(as.dist(delta), k=3),
+       cube = FALSE)
+```
+
+
+
+
+

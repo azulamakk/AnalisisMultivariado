@@ -48,15 +48,9 @@ plot3d(X, col=as.factor(data$etiqueta))
 #----b) Calcular las distancias de Mahalanobis de los datos a la media y 
 # estudiar el ajuste con una distribución Chi-Cuadrado de n – 1 grados de libertad.
 
-data$mahalnobis<- mahalanobis(data, colMeans(data), cov(data))
-
-n = ncol(data)
-
-data$pvalue_outlier = 1 - pchisq(data$mahalnobis, df=n-1)
-
-options(scipen=999)
-
-data %>% filter(pvalue_outlier < 0.05)
+mahala = mahalanobis(data,colMeans(data),cov(data))
+plot(density(mahala),col = "purple",main = "Comparación Mahalanobis y Chi-Cuadrado")
+curve(dchisq(x,ncol(data)-1), add=TRUE)
 
 #----c) Se proponen transformaciones no lineales, definiendo nuevas 
 # variables a partir de las originales como:W1 = √X1, W2 = √X2 y W3 = log(X3). 

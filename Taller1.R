@@ -75,6 +75,9 @@ cov(X) #Se le llama matriz de varianzas y covarianzas = S
 #No nos da información porque las magnitudes son re chotas, pero el signo si nos dicen
 #En la diagonal de la matriz de covarianzas son las varianzas.
 
+# Esta matriz proporciona información sobre la variabilidad y las relaciones lineales 
+# entre variables en un conjunto de datos, siendo esencial para realizar inferencias, 
+# construir modelos y comprender la estructura de dependencia en diversas disciplinas.
 #Para poder elavuar mejor los resultados de la matriz de covarianzas vamos a estanderizar los valores de la matriz.
 scale(X) #Estandarizamos.  La unidades estan expresadas en desvíos
 
@@ -90,6 +93,14 @@ cov(scale(X)) #Que es lo mismo de cor(X)
 #Un heatmap le pone colores a las relaciones
 covarianzasEscaladas <- cov(scale(X))
 corrplot(covarianzasEscaladas, method = "ellipse")
+
+# Limitaciones:
+# - Sensibilidad a la linealidad: La matriz de correlaciones solo mide relaciones lineales entre variables. 
+# Si existen relaciones no lineales, la correlación puede no capturarlas adecuadamente.
+# - Influencia de valores atípicos: Los valores atípicos pueden afectar significativamente las estimaciones 
+# de correlación, especialmente en conjuntos de datos pequeños.
+# - No implica causalidad: La correlación no implica causalidad. Dos variables pueden estar correlacionadas, 
+# pero esto no significa necesariamente que una causa la otra.
 
 #-----f) Repetir los últimos tres incisos si se decide eliminar 
 # las propiedades con Landside mayor a 2000. Detección de datos atípicos
