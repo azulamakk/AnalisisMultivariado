@@ -768,7 +768,7 @@ Componente Principal 2 (CP2):
 
 - La variable 1 tiene un valor positivo (0.66079486), lo que indica que valores altos en esta variable están asociados con valores altos en la CP2.
 
-- La variable 2 tiene el valor más negativo (-0.74741077), lo que indica que tiene el mayor peso en esta componente y que valores altos en esta variable están asociados con valores bajos en la CP2.
+- La variable 2 tiene el valor más fco (-0.74741077), lo que indica que tiene el mayor peso en esta componente y que valores altos en esta variable están asociados con valores bajos en la CP2.
 
 - La variable 3 tiene un valor cercano a cero (0.06875527), lo que indica que tiene un peso relativamente bajo en esta componente.
 
